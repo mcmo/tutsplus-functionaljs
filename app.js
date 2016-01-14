@@ -39,6 +39,15 @@ function compareValues(item, property, value){
   }
 }
 
+function makeFilter(property){
+  return function(value){
+    return filterBeers(property, value);
+  }
+}
+
+filterByLocale = makeFilter('locale');
+filterByType = makeFilter('type');
+
 loadBeers(beers);
 
 filters.addEventListener('click', function (e) {
@@ -55,19 +64,19 @@ filters.addEventListener('click', function (e) {
       filteredBeers = beers;
       break;
     case 'domestic':
-      filteredBeers = filterBeers('locale', 'domestic');
+      filteredBeers = filterByLocale('domestic');
       break;
     case 'imports':
-      filteredBeers = filterBeers('locale', 'import');
+      filteredBeers = filterByLocale('import');;
       break;
     case 'ale':
-      filteredBeers = filterBeers('type', ['ipa', 'ale']);
+      filteredBeers = filterByType(['ipa', 'ale']);
       break;
     case 'lager':
-      filteredBeers = filterBeers('type', 'lager');
+      filteredBeers = filterByType('lager');
       break;
     case 'stout':
-      filteredBeers = filterBeers('type', 'stout');
+      filteredBeers = filterByType('stout');
       break;
   }
 
