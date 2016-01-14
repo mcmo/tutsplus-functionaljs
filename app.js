@@ -6,19 +6,9 @@ var averageAbv = document.getElementById('averageAbv');
 var filters = document.getElementById("filters");
 var filterLinks = filters.querySelectorAll("a");
 
-function loadBeers(beers) {
-  beerList.innerHTML = _.template(beerTemplate)({beers: beers});
-  averageAbv.innerHTML = getAverageAbv(beers);
-}
+var fp = {};
 
-function setActiveFilters(active){
-  for (i = 0; i < filterLinks.length; i++) {
-    filterLinks[i].classList.remove('btn-active');
-  }
-  active.classList.add('btn-active');
-}
-
-function filter(collection, callback){
+fp.filter = function (collection, callback) {
   var filtered = [];
   for (i = 0; i < collection.length; i++) {
     if (callback(collection[i])) {
@@ -27,37 +17,67 @@ function filter(collection, callback){
   }
   return filtered;
 }
-function map(collection, callback){
+
+fp.map = function (collection, callback) {
   var mapped = [];
-  for (var i = 0; i < collection.length; i++){
+  for (var i = 0; i < collection.length; i++) {
     mapped.push(callback(collection[i]));
   }
   return mapped;
 };
 
-function reduce(collection, callback, initial){
+fp.reduce = function (collection, callback, initial) {
   var last = initial;
-  for (var i = 0; i < collection.length; i++){
+  for (var i = 0; i < collection.length; i++) {
     last = callback(last, collection[i]);
   }
   return last;
 };
 
-function getAverageAbv(beers){
-  var abvs = map(beers, function(beer){
-    return beer.abv;
-  });
-
-  var total = reduce(abvs, function(a, b){
-    return a + b;
-  }, 0);
-
-  return Math.round(total / beers.length * 10) / 10;
+fp.add = function (a, b) {
+  return a + b;
 }
 
-function makeFilter(collection, property){
-  return function(value){
-    return filter(collection, function(beer){
+fp.pluck = function(collection, property){
+  return fp.map(collection, function(item){
+    return item[property];
+  });
+}
+
+fp.mean = function(collection, property){
+  if (property){
+    collection = fp.pluck(collection, property);
+  }
+  return fp.reduce(collection, fp.add, 0) / collection.length;
+}
+
+function loadBeers(beers) {
+  beerList.innerHTML = _.template(beerTemplate)({
+    beers: beers
+  });
+  averageAbv.innerHTML = getAverageAbv(beers);
+}
+
+function setActiveFilters(active) {
+  for (i = 0; i < filterLinks.length; i++) {
+    filterLinks[i].classList.remove('btn-active');
+  }
+  active.classList.add('btn-active');
+}
+
+function roundDecimal(number, places){
+  var factor = Math.pow(10, places);
+  return Math.round(number * factor) / factor;
+}
+
+function getAverageAbv(beers) {
+  var mean = fp.mean(beers, 'abv');
+  return 'Average ABV: ' + roundDecimal(mean, 1) + '%';
+}
+
+function makeFilter(collection, property) {
+  return function (value) {
+    return fp.filter(collection, function (beer) {
       return beer[property] === value;
     });
   }
@@ -68,38 +88,42 @@ filterByType = makeFilter(allBeers, 'type');
 
 loadBeers(allBeers);
 
-filters.addEventListener('click', function (e) {
-  e.preventDefault();
-  var clicked = e.target;
-  var filterName = clicked.dataset.filter;
-  var filteredBeers = [];
-  var i;
+// w/o loop: $('#filters a').click(function(e){
+for (var i = 0; i < filterLinks.length; i++){
 
-  setActiveFilters(clicked);
+  filterLinks[i].addEventListener('click', function (e) {
+    e.preventDefault();
+    var clicked = e.target;
+    var filterName = clicked.dataset.filter;
+    var filteredBeers = [];
+    var i;
 
-  switch (filterName) {
-    case 'all':
-      filteredBeers = allBeers;
-      break;
-    case 'domestic':
-      filteredBeers = filterByLocale('domestic');
-      break;
-    case 'imports':
-      filteredBeers = filterByLocale('import');;
-      break;
-    case 'ale':
-      filteredBeers = filter(allBeers, function(beer){
-        return beer.type === 'ipa' || beer.type === 'ale';
-      });
-      break;
-    case 'lager':
-      filteredBeers = filterByType('lager');
-      break;
-    case 'stout':
-      filteredBeers = filterByType('stout');
-      break;
-  }
+    setActiveFilters(clicked);
 
-  loadBeers(filteredBeers);
+    switch (filterName) {
+      case 'all':
+        filteredBeers = allBeers;
+        break;
+      case 'domestic':
+        filteredBeers = filterByLocale('domestic');
+        break;
+      case 'imports':
+        filteredBeers = filterByLocale('import');;
+        break;
+      case 'ale':
+        filteredBeers = fp.filter(allBeers, function (beer) {
+          return beer.type === 'ipa' || beer.type === 'ale';
+        });
+        break;
+      case 'lager':
+        filteredBeers = filterByType('lager');
+        break;
+      case 'stout':
+        filteredBeers = filterByType('stout');
+        break;
+    }
 
-});
+    loadBeers(filteredBeers);
+  });
+
+}

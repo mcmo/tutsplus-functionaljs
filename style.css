@@ -1,5 +1,6 @@
 body {
-  background: url("http://i.imgur.com/IDJdOFb.jpg") top left repeat;
+  /*background: url("http://i.imgur.com/IDJdOFb.jpg") top left repeat;*/
+  background-color: black;
   color: white;
 }
 a:link, a:hover, a:active, a:visited {
