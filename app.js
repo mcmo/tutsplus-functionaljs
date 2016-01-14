@@ -77,7 +77,7 @@ function getAverageAbv(beers) {
 
 function makeFilter(collection, property) {
   return function (value) {
-    return fp.filter(collection, function (beer) {
+    return _.filter(collection, function (beer) {
       return beer[property] === value;
     });
   }
@@ -111,7 +111,7 @@ for (var i = 0; i < filterLinks.length; i++){
         filteredBeers = filterByLocale('import');;
         break;
       case 'ale':
-        filteredBeers = fp.filter(allBeers, function (beer) {
+        filteredBeers = _.filter(allBeers, function (beer) {
           return beer.type === 'ipa' || beer.type === 'ale';
         });
         break;
@@ -120,6 +120,11 @@ for (var i = 0; i < filterLinks.length; i++){
         break;
       case 'stout':
         filteredBeers = filterByType('stout');
+        break;
+      case 'surprise':
+        console.log(allBeers);
+        filteredBeers = [_.sample(allBeers)];
+        console.log(filteredBeers);
         break;
     }
 
